@@ -1,18 +1,20 @@
 const express = require('express');
-
+const { google } = require('googleapis');
 const {authorize}=require('./auth');
-const {credentials}=require('./credentials.js');
+const {web}=require('./credentials.js');
 const dotenv=require('dotenv');
 dotenv.config();
 
 
 const app = express();
 
+//Function to initialize the application
 async function initialize(){
     try {
-      const oAuth2Client = authorize(credentials);
+      //authorize the app using the provided credentials
+      const oAuth2Client = authorize(web);
       
-  
+     //endpoint to handle callback from google oAuth2
       app.get('/oauth2callback', (req, res) => {
         const code = req.query.code;
         res.send(`Authorization code received: ${code}`);
@@ -29,5 +31,6 @@ async function initialize(){
       console.error('Error during initialization:', err);
     }
   };
- 
+
+//call the function to start the application
 initialize();

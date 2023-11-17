@@ -2,19 +2,22 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const readline = require('readline');
 const { OAuth2Client } = require('google-auth-library');
-const {getMessages}=require('./gmail');
+const {repeatSequence} =require('./gmail.js')
+const {getMessages} =require('./gmail.js')
+
 
 
 const {web}=require('./credentials.js');
 
-const TOKEN_PATH='token.json';    //Place where access tokens will be stored
+//Place where access tokens will be stored
+const TOKEN_PATH='token.json';    
 const SCOPES = ['https://www.googleapis.com/auth/gmail.modify'];  //https://developers.google.com/gmail/api/auth/scopes  
 
 
 // https://github.com/googleapis/google-api-nodejs-client#authentication-and-authorization
 async function authorize(credentials){
-    console.log(credentials);
     const { client_id, client_secret,redirect_uris} = web;
+
     const oAuth2Client = new google.auth.OAuth2(
         client_id,
         client_secret, 
@@ -28,6 +31,8 @@ async function authorize(credentials){
                 else resolve(data);
             });
         });
+
+        
         if (!token.trim()) {
           console.log("Token file is empty. Getting access token.");
           return getAccessToken(oAuth2Client);
@@ -36,7 +41,9 @@ async function authorize(credentials){
         const parsedToken = JSON.parse(token);
         oAuth2Client.setCredentials(parsedToken);
         console.log("Credentials set from token file.");
-        return getMessages(oAuth2Client);
+
+        await getMessages(oAuth2Client);
+        return repeatSequence(oAuth2Client);
       }
       catch (err) {
         if (err.code === 'ENOENT') {
@@ -50,13 +57,12 @@ async function authorize(credentials){
     }
 
 
-       
-
-
+    // https://github.com/googleapis/google-auth-library-nodejs/tree/main#oauth2
 async function getAccessToken(oAuth2Client){
     const authUrl= oAuth2Client.generateAuthUrl({
         access_type:'offline',
         scope:SCOPES,
+        prompt:'consent'
     });
     console.log('Authorize this app by visiting this url',authUrl);
 
@@ -77,9 +83,10 @@ async function getAccessToken(oAuth2Client){
             console.log('Token retrieved:', tokens);
         
             oAuth2Client.setCredentials(tokens);
-            await fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
+             fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
             console.log('Token stored to', TOKEN_PATH);
-            return getMessages(oAuth2Client);
+            await getMessages(oAuth2Client);
+            return repeatSequence(oAuth2Client);
           } catch (err) {
             console.error('Error retrieving access token', err);
             throw err;
@@ -88,7 +95,4 @@ async function getAccessToken(oAuth2Client){
     
 }
 
-
-module.exports={
-    authorize
-};
+module.exports={authorize};
