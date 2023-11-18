@@ -18,7 +18,7 @@ async function getMessages(oAuth2Client){
                     const labelsArray=response.data.messages[0].labelIds; 
                     // console.log(labelsArray);                                 // console.log(response.data.messages);                                                                                                    // console.log(labelsArray);
                         if(!isReplyByUser(labelsArray)){
-                            console.log(response.data.messages[0].snippet);
+                            // console.log(response.data.messages[0].snippet);
                             await sendReply(gmail,userId,response);   
                         }      
                     }
@@ -52,7 +52,7 @@ async function sendReply(gmail,userId,response){
     const subjectHeader=heads.find(h=>h.name==='Subject');
     const inReplyTo=heads.find(h=>h.name==='Message-ID');
 
-    const replyMessage="Thankyou for this opportunity. I really appreciate your time and effort";
+    const replyMessage="Thankyou so much for this opportunity. I really appreciate your time and effort";
     const replyTo= FromHeader.value;
     const replyFrom=toHeader.value;
     const replySubject=`${subjectHeader.value}`;
@@ -66,6 +66,7 @@ async function sendReply(gmail,userId,response){
             threadId: thread_id,
         },
     });
+    console.log("message sent");
 
     const msgId=res.data.id;
     const labelName='BDAY';
@@ -114,21 +115,19 @@ async function addLabel(gmail, message_id, labelName) {
             addLabelIds: [createdLabel.data.id],
           },
         });
-
         }else{
+
             await gmail.users.messages.modify({
                 userId: 'me',
                 id: message_id,
                 requestBody: {
-                    addLabelIds: [label.id],
+                  addLabelIds: [label.id],
                 },
-            });
+              });
 
-            console.log('Label added:', labelName);
-        }
+        }     
       }
  
-
       function repeatSequence(oAuth2Client) {
         const interval = Math.floor(Math.random() * (120000 - 45000 + 1)) + 45000; // Random interval between 45 to 120 seconds
     
